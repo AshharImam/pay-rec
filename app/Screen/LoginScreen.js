@@ -5,7 +5,7 @@ import Screen from "../Components/Screen";
 import AppSignInButton from "../Components/AppSignInButton";
 import db from "../../firebase";
 
-function LoginScreen() {
+function LoginScreen({ navigation }) {
   const onSignIn = (googleUser) => {
     // console.log("Google Auth Response", googleUser);
     // We need to register an Observer on Firebase Auth to make sure auth is initialized.
@@ -23,7 +23,7 @@ function LoginScreen() {
           .auth()
           .signInWithCredential(credential)
           .then((result) => {
-            // console.log("user signed in", result);
+            console.log("user signed in", result);
 
             if (result.additionalUserInfo.isNewUser) {
               db.collection("users").doc(result.user.uid).set({
@@ -34,6 +34,7 @@ function LoginScreen() {
                 lastName: result.additionalUserInfo.profile.family_name,
                 createdAt: Date.now(),
               });
+              navigation.navigate("DashboardScreen");
             } else {
               db.collection("users").doc(result.user.uid).update({
                 lastLoggin: Date.now(),

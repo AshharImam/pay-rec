@@ -1,24 +1,22 @@
-import React, { useEffect, useSel } from "react";
-import {} from "react-red";
+import React, { useEffect } from "react";
 import Screen from "../Components/Screen";
 import { auth } from "../../firebase";
 
 import AppLoader from "../Components/AppLoader";
-import { login, logout, selectUser } from "../user/userSlice";
-import { useDispatch, useSelector } from "react-redux";
 
 function LoadingScreen({ navigation }) {
-  const user = useSelector(selectUser);
-  const dispatch = useDispatchatch();
-
   useEffect(() => {
     (() => {
       auth.onAuthStateChanged((user) => {
-        console.log(user);
+        console.log("User is >>>", user);
         if (user) {
-          dispatch(login(user));
+          navigation.navigate("DashboardScreen", {
+            displayName: user.displayName,
+            email: user.email,
+            uid: user.uid,
+          });
         } else {
-          dispatch(logout());
+          navigation.navigate("LoginScreen");
         }
       });
     })();

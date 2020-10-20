@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 
-import ConnectToServerScreen from "./app/Screen/ConnectToServerScreen";
-import { Text, View } from "react-native";
 import DetailsScreen from "./app/Screen/DetailsScreen";
 import LoadingScreen from "./app/Screen/LoadingScreen";
 import LoginScreen from "./app/Screen/LoginScreen";
