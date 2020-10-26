@@ -23,7 +23,7 @@ function LoadingScreen({ navigation }) {
   }, []);
   return (
     <Screen>
-      <AppLoader />
+      <AppLoader backgroundCOlor={"#FFE28E"} color={"#2B4D59"} />
     </Screen>
   );
 }

@@ -22,11 +22,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    backgroundColor: "dodgerblue",
-    padding: 7,
+    backgroundColor: "#2B4D59",
+    padding: 9,
   },
   text: {
     fontSize: 18,
+    fontWeight: "500",
     color: "white",
   },
   icon: {

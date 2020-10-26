@@ -3,9 +3,24 @@ import * as Google from "expo-google-app-auth";
 import firebase from "firebase";
 import Screen from "../Components/Screen";
 import AppSignInButton from "../Components/AppSignInButton";
-import db from "../../firebase";
+import db, { auth, provider } from "../../firebase";
+import { Text } from "react-native";
+import { useFonts } from "expo-font";
+import { AppLoading } from "expo";
 
 function LoginScreen({ navigation }) {
+  useEffect(
+    () =>
+      navigation.addListener("beforeRemove", (e) => {
+        // Prevent default behavior of leaving the screen
+        e.preventDefault();
+
+        // Prompt the user before leaving the screen
+        return;
+      }),
+    [navigation]
+  );
+
   const onSignIn = (googleUser) => {
     // console.log("Google Auth Response", googleUser);
     // We need to register an Observer on Firebase Auth to make sure auth is initialized.
@@ -18,12 +33,13 @@ function LoginScreen({ navigation }) {
           googleUser.idToken,
           googleUser.accessToken
         );
+        console.log(`credentials >>> ${credential}`);
         // Sign in with credential from the Google user.
         firebase
           .auth()
           .signInWithCredential(credential)
           .then((result) => {
-            console.log("user signed in", result);
+            console.log("user signed in", result.additionalUserInfo.isNewUser);
 
             if (result.additionalUserInfo.isNewUser) {
               db.collection("users").doc(result.user.uid).set({
@@ -34,12 +50,16 @@ function LoginScreen({ navigation }) {
                 lastName: result.additionalUserInfo.profile.family_name,
                 createdAt: Date.now(),
               });
-              navigation.navigate("DashboardScreen");
             } else {
               db.collection("users").doc(result.user.uid).update({
                 lastLoggin: Date.now(),
               });
             }
+            navigation.navigate("DashboardScreen", {
+              displayName: result.user.displayName,
+              uid: result.user.uid,
+              email: result.user.email,
+            });
           })
           .catch(function (error) {
             // Handle Errors here.
@@ -84,6 +104,7 @@ function LoginScreen({ navigation }) {
       });
 
       if (result.type === "success") {
+        console.log(result);
         onSignIn(result);
         return result.accessToken;
       } else {
@@ -94,8 +115,32 @@ function LoginScreen({ navigation }) {
     }
   };
 
+  let [loaded] = useFonts({
+    Precious: require("../assets/fonts/Precious.ttf"),
+  });
+  if (!loaded) {
+    return <AppLoading />;
+  }
+
   return (
-    <Screen style={{ justifyContent: "center" }}>
+    <Screen
+      style={{
+        justifyContent: "center",
+        backgroundColor: "#FFE28E",
+        alignItems: "center",
+        padding: 20,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 70,
+          fontFamily: "Precious",
+          color: "#2B4D59",
+          marginBottom: 30,
+        }}
+      >
+        pay-rec
+      </Text>
       <AppSignInButton
         title="Signin With Google"
         onPress={signInWithGoogleAsync}

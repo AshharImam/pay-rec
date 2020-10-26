@@ -5,8 +5,6 @@
     "name": "pay-rec",
     "slug": "pay-rec",
     "version": "1.0.0",
-    "assetBundlePatterns": [
-      "**/*"
-    ]
+    "assetBundlePatterns": ["**/*"]
   }
 }
