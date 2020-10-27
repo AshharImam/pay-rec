@@ -13,8 +13,8 @@
  
  👉 Send push notification to the users that a payment was received.
  
-![image](https://i.ibb.co/b2VKhSc/whatsapp-image-2020-10-27-at-9.jpg)
-![image](https://i.ibb.co/QD3p5g0/whatsapp-image-2020-10-27-at-9-1.jpg)
-![image](https://i.ibb.co/bggdsVJ/whatsapp-image-2020-10-27-at-9-4.jpg)
-![image](https://i.ibb.co/LpSt5r9/whatsapp-image-2020-10-27-at-9-3.jpg)
-![image](https://i.ibb.co/syWKpgq/whatsapp-image-2020-10-27-at-9-2.jpg)
+![image](https://i.ibb.co/c8k1cqc/whatsapp-image-2020-10-27-at-9-5.jpg)
+![image](https://i.ibb.co/RCj1Zx0/whatsapp-image-2020-10-27-at-9-6.jpg)
+![image](https://i.ibb.co/JC6RXwQ/whatsapp-image-2020-10-27-at-9-7.jpg)
+![image](https://i.ibb.co/fDf0mqT/whatsapp-image-2020-10-27-at-9-8.jpg)
+![image](https://i.ibb.co/PYXRQ0W/whatsapp-image-2020-10-27-at-9-9.jpg)
