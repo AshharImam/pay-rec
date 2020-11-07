@@ -21,14 +21,37 @@ import Header from "../Components/Header";
 import Screen from "../Components/Screen";
 import AppTextInput from "../Components/AppTextInput";
 import axios from "../../axios/axios";
+import { useStateValue } from "../../StateProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import db from "../../firebase";
+import AppLoader from "../Components/AppLoader";
 
-const PaymentScreen = ({ route }) => {
+const PaymentScreen = ({ route, navigation }) => {
+  const [state, dispatch] = useStateValue();
+  const getItem = async (key) => {
+    try {
+      const item = await AsyncStorage.getItem(key);
+      return item;
+    } catch (error) {}
+  };
+
+  const setItem = async (key, value) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (error) {}
+  };
+
+  getItem("uid").then((item) => console.log(item)),
+    getItem("token").then((item) => console.log(item));
+
+  const [loading, setLoading] = useState(false);
   const { data } = route.params; // data from barcode - navigation parameter
   const dataList = data?.split("_"); // Splitting the data
   const [ledgerName, vchNumber] = dataList; // destructuring for name and vch number
   const [checked, setChecked] = useState("Cash"); // Radio button check status
   const [focused, setFocused] = useState(false); //
   const [amount, setAmount] = useState(null); // amount for reciept
+  const [chequeNumber, setChequeNumber] = useState(null); // amount for reciept
 
   // visible cosnt for modal hide / show
   const [visible, setVisible] = useState(false);
@@ -38,300 +61,236 @@ const PaymentScreen = ({ route }) => {
   // handling axios on submit
   const submitHandler = async () => {
     hideModal();
+    getItem("uid").then((item) => {
+      postRequestToServer(item);
+    });
+
+    // checked === "Cash"
+    //   ? addRecieptInDb(uid, ledgerName, vchNumber, amount, checked)
+    //   : checked === "Cheque"
+    //   ? addRecieptInDb(uid, ledgerName, vchNumber, amount, checked, null)
+    //   : null;
+    // addRecieptInDb(uid, ledgerName, vchNumber, amount, checked);
+  };
+
+  const postRequestToServer = async (uid) => {
+    setLoading(true);
     const dateObj = new Date();
-    const dateOfMonth = dateObj.getDate();
+    let dateOfMonth = dateObj.getDate();
+    dateOfMonth = dateOfMonth < 10 ? `${"0" + dateOfMonth}` : dateOfMonth;
     const month = dateObj.getMonth();
     const year = dateObj.getFullYear();
     const date = `${year}${month + 1}${dateOfMonth}`;
-    console.log(date);
-    const cashReciept = `<ENVELOPE>
-    <HEADER>
-    <TALLYREQUEST>Import Data</TALLYREQUEST>
-    </HEADER>
-    <BODY>
-    <IMPORTDATA>
-    <REQUESTDESC>
-    <REPORTNAME>Vouchers</REPORTNAME>
-    <STATICVARIABLES>
-    <SVCURRENTCOMPANY>Dawood Fiber Mills</SVCURRENTCOMPANY>
-    </STATICVARIABLES>
-    </REQUESTDESC>
-    <REQUESTDATA>
-    <TALLYMESSAGE xmlns:UDF="TallyUDF">
-    <VOUCHER VCHTYPE="Receipt" ACTION="Create" OBJVIEW="Accounting Voucher View">
-    <DATE>${date}</DATE>
-    <NARRATION></NARRATION>
-    <VOUCHERTYPENAME>Receipt</VOUCHERTYPENAME>
-    <VOUCHERNUMBER>1</VOUCHERNUMBER>
-    <PARTYLEDGERNAME>${ledgerName}</PARTYLEDGERNAME>
-    <PERSISTEDVIEW>Accounting Voucher View</PERSISTEDVIEW>
-    <EFFECTIVEDATE>${date}</EFFECTIVEDATE>
-    <ALLLEDGERENTRIES.LIST>
-    <LEDGERNAME>${ledgerName}</LEDGERNAME>
-    <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>
-    <AMOUNT>${amount}</AMOUNT>
-    <BILLALLOCATIONS.LIST>
-    <NAME>${vchNumber}</NAME>
-    <BILLTYPE>Agst Ref</BILLTYPE>
-    <AMOUNT>${amount}</AMOUNT>
-    </BILLALLOCATIONS.LIST>
-    </ALLLEDGERENTRIES.LIST>
-    <ALLLEDGERENTRIES.LIST>
-    <LEDGERNAME>Cash Head Office</LEDGERNAME>
-    <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
-    <AMOUNT>-${amount}</AMOUNT>
-    </ALLLEDGERENTRIES.LIST>
-    </VOUCHER>
-    </TALLYMESSAGE>
-    </REQUESTDATA>
-    </IMPORTDATA>
-    </BODY>
-    </ENVELOPE>`;
+    const formData = new FormData();
+    console.log(`Date>>>>>>>>>>>>>${typeof date} --- ${date}`);
+    formData.append("uid", uid);
+    formData.append("amount", amount);
+    formData.append("ledgerName", ledgerName);
+    formData.append("vchNumber", vchNumber);
+    formData.append("checked", checked);
+    formData.append("date", date);
+    checked === "Cheque" && formData.append("chequeNumber", chequeNumber);
+    // navigation.navigate("DashboardScreen");
 
-    const bankReciept = `<ENVELOPE>
-    <HEADER>
-        <TALLYREQUEST>Import Data</TALLYREQUEST>
-    </HEADER>
-    <BODY>
-            <IMPORTDATA>
-              <REQUESTDESC>
-                <REPORTNAME>Vouchers</REPORTNAME>
-                <STATICVARIABLES>
-                    <SVCURRENTCOMPANY>Dawood Fiber Mills</SVCURRENTCOMPANY>
-                </STATICVARIABLES>
-              </REQUESTDESC>
-              <REQUESTDATA>
-                <TALLYMESSAGE xmlns:UDF="TallyUDF">
-                    <VOUCHER VCHTYPE="Receipt" ACTION="Create" OBJVIEW="Accounting Voucher View">
-                        <DATE>${date}</DATE>
-                        <NARRATION></NARRATION>
-                        <VOUCHERTYPENAME>Receipt</VOUCHERTYPENAME>
-                        <VOUCHERNUMBER>1</VOUCHERNUMBER>
-                        <PARTYLEDGERNAME>${ledgerName}</PARTYLEDGERNAME>
-                        <PERSISTEDVIEW>Accounting Voucher View</PERSISTEDVIEW>
-                        <EFFECTIVEDATE>${date}</EFFECTIVEDATE>
-                        <ALLLEDGERENTRIES.LIST>
-                        <LEDGERNAME>${ledgerName}</LEDGERNAME>
-                        <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>
-                        <AMOUNT>${amount}</AMOUNT>
-                        <BILLALLOCATIONS.LIST>
-                            <NAME>${vchNumber}</NAME>
-                            <BILLTYPE>Agst Ref</BILLTYPE>
-                            <AMOUNT>${amount}</AMOUNT>
-                            </BILLALLOCATIONS.LIST>
-                        </ALLLEDGERENTRIES.LIST>
-                        <ALLLEDGERENTRIES.LIST>
-                        <OLDAUDITENTRYIDS.LIST TYPE="Number">
-                        <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
-                        </OLDAUDITENTRYIDS.LIST>
-                        <LEDGERNAME>BAHL</LEDGERNAME>
-                        <GSTCLASS/>
-                        <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
-                        <LEDGERFROMITEM>No</LEDGERFROMITEM>
-                        <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>
-                        <ISPARTYLEDGER>Yes</ISPARTYLEDGER>
-                        <ISLASTDEEMEDPOSITIVE>Yes</ISLASTDEEMEDPOSITIVE>
-                        <AMOUNT>-${amount}</AMOUNT>
-                        <BANKALLOCATIONS.LIST>
-                        <DATE>${date}</DATE>
-                        <INSTRUMENTDATE>${date}</INSTRUMENTDATE>
-                        <NAME>1</NAME>
-                        <TRANSACTIONTYPE>Cheque/DD</TRANSACTIONTYPE>
-                        <PAYMENTFAVOURING>${ledgerName}</PAYMENTFAVOURING>
-                        <INSTRUMENTNUMBER>test123</INSTRUMENTNUMBER>
-                        <UNIQUEREFERENCENUMBER>1</UNIQUEREFERENCENUMBER>
-                        <STATUS>No</STATUS>
-                        <PAYMENTMODE>Transacted</PAYMENTMODE>
-                        <BANKPARTYNAME>${ledgerName}</BANKPARTYNAME>
-                        <ISCONNECTEDPAYMENT>No</ISCONNECTEDPAYMENT>
-                        <ISSPLIT>No</ISSPLIT>
-                        <ISCONTRACTUSED>No</ISCONTRACTUSED>
-                        <CHEQUEPRINTED> 1</CHEQUEPRINTED>
-                        <AMOUNT>-${amount}</AMOUNT>
-                        <CONTRACTDETAILS.LIST> </CONTRACTDETAILS.LIST>
-                        </BANKALLOCATIONS.LIST>
-                        <BILLALLOCATIONS.LIST> </BILLALLOCATIONS.LIST>
-                        <INTERESTCOLLECTION.LIST> </INTERESTCOLLECTION.LIST>
-                        <OLDAUDITENTRIES.LIST> </OLDAUDITENTRIES.LIST>
-                        <ACCOUNTAUDITENTRIES.LIST> </ACCOUNTAUDITENTRIES.LIST>
-                        <AUDITENTRIES.LIST> </AUDITENTRIES.LIST>
-                        <TAXBILLALLOCATIONS.LIST> </TAXBILLALLOCATIONS.LIST>
-                        <TAXOBJECTALLOCATIONS.LIST> </TAXOBJECTALLOCATIONS.LIST>
-                        <TDSEXPENSEALLOCATIONS.LIST> </TDSEXPENSEALLOCATIONS.LIST>
-                        <VATSTATUTORYDETAILS.LIST> </VATSTATUTORYDETAILS.LIST>
-                        <COSTTRACKALLOCATIONS.LIST> </COSTTRACKALLOCATIONS.LIST>
-                      </ALLLEDGERENTRIES.LIST>
-                    </VOUCHER>
-                </TALLYMESSAGE>
-              </REQUESTDATA>
-            </IMPORTDATA>
-      </BODY>
-    </ENVELOPE>`;
-
-    const xmlReciept =
-      checked === "Cash"
-        ? cashReciept
-        : checked === "Cheque"
-        ? bankReciept
-        : null;
-
-    await axios({
+    // use axios to POST
+    await axios("/post", {
       method: "POST",
-      data: cashReciept,
+      params: formData,
       headers: {
-        "Content-Type": "text/xml",
+        Accept: "application/json",
+        "Content-Type": "multipart/form-data",
       },
     })
-      .then((res) => console.log(res))
+      .then((res) => {
+        navigation.navigate("DashboardScreen");
+        console.log(res);
+      })
       .catch((e) => console.log(e));
+    setLoading(false);
   };
 
   return (
-    <Portal>
-      {/* Portal Provider for Modal */}
-      <Screen style={{ backgroundColor: "#FFE28E" }}>
-        {/* Header Component */}
-        <Header />
-        {/* Main Container */}
-        <View style={styles.container} onPress={() => setFocused(true)}>
-          {/* Payment Selection Container */}
-          <View style={styles.payMethodContainer}>
-            {/* Radio Button for Cash */}
-            <TouchableOpacity
-              style={styles.radioContainer}
-              onPress={() => setChecked("Cash")}
-            >
-              <Text style={styles.radioText}>Cash</Text>
-              <RadioButton
-                value="Cash"
-                status={checked === "Cash" ? "checked" : "unchecked"}
-                onPress={() => setChecked("Cash")}
-                color="#2B4D59"
-                uncheckedColor="#2B4D59"
+    <>
+      {loading ? (
+        <AppLoader backgroundCOlor={"#FFE28E"} color={"#2B4D59"} />
+      ) : (
+        <Portal>
+          {/* Portal Provider for Modal */}
+          <Screen style={{ backgroundColor: "#FFE28E" }}>
+            {/* Header Component */}
+            <Header />
+            {/* Main Container */}
+            <View style={styles.container} onPress={() => setFocused(true)}>
+              {/* Payment Selection Container */}
+              <View style={styles.payMethodContainer}>
+                {/* Radio Button for Cash */}
+                <TouchableOpacity
+                  style={styles.radioContainer}
+                  onPress={() => setChecked("Cash")}
+                >
+                  <Text style={styles.radioText}>Cash</Text>
+                  <RadioButton
+                    value="Cash"
+                    status={checked === "Cash" ? "checked" : "unchecked"}
+                    onPress={() => setChecked("Cash")}
+                    color="#2B4D59"
+                    uncheckedColor="#2B4D59"
+                  />
+                </TouchableOpacity>
+
+                {/* Radio Button for Cheque */}
+
+                <TouchableOpacity
+                  style={styles.radioContainer}
+                  onPress={() => setChecked("Cheque")}
+                >
+                  <Text style={styles.radioText}>Cheque</Text>
+                  <RadioButton
+                    value="Cheque"
+                    status={checked === "Cheque" ? "checked" : "unchecked"}
+                    onPress={() => setChecked("Cheque")}
+                    color="#2B4D59"
+                    uncheckedColor="#2B4D59"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Amount Input Box Component */}
+              <AppTextInput
+                onKeyPress={() => setFocused(true)}
+                isFocused={focused}
+                mode="outlined"
+                keyboardType="number-pad"
+                dense
+                label="Amount"
+                placeholder="Enter Amount"
+                style={styles.textInput}
+                value={amount}
+                onChangeText={(text) => setAmount(text)}
               />
-            </TouchableOpacity>
+              {checked === "Cheque" && (
+                <AppTextInput
+                  onKeyPress={() => setFocused(true)}
+                  isFocused={focused}
+                  mode="outlined"
+                  keyboardType="default"
+                  dense
+                  label="Cheque Number"
+                  placeholder="Enter Cheque Number"
+                  style={styles.textInput}
+                  value={chequeNumber}
+                  onChangeText={(text) => setChequeNumber(text)}
+                />
+              )}
 
-            {/* Radio Button for Cheque */}
-
-            <TouchableOpacity
-              style={styles.radioContainer}
-              onPress={() => setChecked("Cheque")}
-            >
-              <Text style={styles.radioText}>Cheque</Text>
-              <RadioButton
-                value="Cheque"
-                status={checked === "Cheque" ? "checked" : "unchecked"}
-                onPress={() => setChecked("Cheque")}
-                color="#2B4D59"
-                uncheckedColor="#2B4D59"
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Amount Input Box Component */}
-          <AppTextInput
-            onKeyPress={() => setFocused(true)}
-            isFocused={focused}
-            mode="outlined"
-            keyboardType="number-pad"
-            dense
-            label="Amount"
-            placeholder="Enter Amount"
-            style={styles.textInput}
-            value={amount}
-            onChangeText={(text) => setAmount(text)}
-          />
-
-          {/* Main Button Container */}
-          <View style={styles.doneButton}>
-            <Button
-              disabled={!amount || !checked ? true : false}
-              title="Done"
-              color="#2B4D59"
-              onPress={() => {
-                Keyboard.dismiss();
-                showModal();
-              }}
-            />
-          </View>
-        </View>
-      </Screen>
-      {/* Modal */}
-      <Modal
-        contentContainerStyle={styles.modalContainer}
-        visible={visible}
-        onDismiss={hideModal}
-      >
-        {/* Modal Title Container "Heade" */}
-        <View style={styles.modalTitleContainer}>
-          {/*   Heading */}
-          <Headline style={styles.modalTitle}>Reciept</Headline>
-          {/*  Reciept */}
-          <FontAwesome5 name="receipt" size={24} color="white" />
-        </View>
-
-        {/* Table */}
-        <View>
-          <DataTable>
-            <DataTable.Row>
-              <DataTable.Cell>
-                <Text style={{ color: "#FFF" }}>Voucher Number</Text>
-              </DataTable.Cell>
-              <DataTable.Cell>
-                <Text style={{ color: "#FFF" }}>{vchNumber}</Text>
-              </DataTable.Cell>
-            </DataTable.Row>
-            <DataTable.Row>
-              <DataTable.Cell>
-                <Text style={{ color: "#FFF" }}>Ledger Name</Text>
-              </DataTable.Cell>
-              <DataTable.Cell>
-                <Text style={{ color: "#FFF" }}>{ledgerName}</Text>
-              </DataTable.Cell>
-            </DataTable.Row>
-            <DataTable.Row>
-              <DataTable.Cell>
-                <Text style={{ color: "#FFF" }}>Payment Method</Text>
-              </DataTable.Cell>
-              <DataTable.Cell>
-                <Text style={{ color: "#FFF" }}>{checked}</Text>
-              </DataTable.Cell>
-            </DataTable.Row>
-            <DataTable.Row>
-              <DataTable.Cell>
-                <Text style={{ color: "#FFF" }}>Amount</Text>
-              </DataTable.Cell>
-              <DataTable.Cell>
-                <Text style={{ color: "#FFF" }}>{amount}</Text>
-              </DataTable.Cell>
-            </DataTable.Row>
-          </DataTable>
-        </View>
-
-        {/* Modal */}
-        <View style={styles.modalButtonContainer}>
-          <ButtonPaper
-            color="#FFE28E"
-            mode="outlined"
-            style={{ borderColor: "#FFE28E" }}
-            labelStyle={{ color: "#FFE28E" }}
-            onPress={hideModal}
-            compact
+              {/* Main Button Container */}
+              <View style={styles.doneButton}>
+                <Button
+                  disabled={
+                    !amount ||
+                    !checked ||
+                    (checked === "Cheque" && !chequeNumber)
+                      ? true
+                      : false
+                  }
+                  title="Done"
+                  color="#2B4D59"
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    showModal();
+                  }}
+                />
+              </View>
+            </View>
+          </Screen>
+          {/* Modal */}
+          <Modal
+            contentContainerStyle={styles.modalContainer}
+            visible={visible}
+            onDismiss={hideModal}
           >
-            Cancel
-          </ButtonPaper>
-          <ButtonPaper
-            style={{ marginLeft: 10 }}
-            color="#FFE28E"
-            mode="contained"
-            labelStyle={{ color: "#2B4D59" }}
-            onPress={submitHandler}
-          >
-            Submit
-          </ButtonPaper>
-        </View>
-      </Modal>
-    </Portal>
+            {/* Modal Title Container "Heade" */}
+            <View style={styles.modalTitleContainer}>
+              {/*   Heading */}
+              <Headline style={styles.modalTitle}>Reciept</Headline>
+              {/*  Reciept */}
+              <FontAwesome5 name="receipt" size={24} color="white" />
+            </View>
+
+            {/* Table */}
+            <View>
+              <DataTable>
+                <DataTable.Row>
+                  <DataTable.Cell>
+                    <Text style={{ color: "#FFF" }}>Voucher Number</Text>
+                  </DataTable.Cell>
+                  <DataTable.Cell>
+                    <Text style={{ color: "#FFF" }}>{vchNumber}</Text>
+                  </DataTable.Cell>
+                </DataTable.Row>
+                <DataTable.Row>
+                  <DataTable.Cell>
+                    <Text style={{ color: "#FFF" }}>Ledger Name</Text>
+                  </DataTable.Cell>
+                  <DataTable.Cell>
+                    <Text style={{ color: "#FFF" }}>{ledgerName}</Text>
+                  </DataTable.Cell>
+                </DataTable.Row>
+                <DataTable.Row>
+                  <DataTable.Cell>
+                    <Text style={{ color: "#FFF" }}>Payment Method</Text>
+                  </DataTable.Cell>
+                  <DataTable.Cell>
+                    <Text style={{ color: "#FFF" }}>{checked}</Text>
+                  </DataTable.Cell>
+                </DataTable.Row>
+                {chequeNumber && checked === "Cheque" && (
+                  <DataTable.Row>
+                    <DataTable.Cell>
+                      <Text style={{ color: "#FFF" }}>Cheuqe Number</Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell>
+                      <Text style={{ color: "#FFF" }}>{chequeNumber}</Text>
+                    </DataTable.Cell>
+                  </DataTable.Row>
+                )}
+                <DataTable.Row>
+                  <DataTable.Cell>
+                    <Text style={{ color: "#FFF" }}>Amount</Text>
+                  </DataTable.Cell>
+                  <DataTable.Cell>
+                    <Text style={{ color: "#FFF" }}>{amount}</Text>
+                  </DataTable.Cell>
+                </DataTable.Row>
+              </DataTable>
+            </View>
+
+            {/* Modal */}
+            <View style={styles.modalButtonContainer}>
+              <ButtonPaper
+                color="#FFE28E"
+                mode="outlined"
+                style={{ borderColor: "#FFE28E" }}
+                labelStyle={{ color: "#FFE28E" }}
+                onPress={hideModal}
+                compact
+              >
+                Cancel
+              </ButtonPaper>
+              <ButtonPaper
+                style={{ marginLeft: 10 }}
+                color="#FFE28E"
+                mode="contained"
+                labelStyle={{ color: "#2B4D59" }}
+                onPress={submitHandler}
+              >
+                Submit
+              </ButtonPaper>
+            </View>
+          </Modal>
+        </Portal>
+      )}
+    </>
   );
 };
 
@@ -370,11 +329,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFE28E",
     color: "#2B4D59",
     fontSize: 20,
+    marginTop: 10,
   },
   modalContainer: {
     backgroundColor: "#2B4D59",
     position: "absolute",
-    height: "40%",
+    height: "50%",
     width: "100%",
     alignSelf: "center",
     bottom: 0,

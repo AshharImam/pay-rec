@@ -9,49 +9,61 @@ import DashboardScreen from "./app/Screen/DashboardScreen";
 import BarcodeScanScreen from "./app/Screen/BarcodeScanScreen";
 import PaymentScreen from "./app/Screen/PaymentScreen";
 import { Provider } from "react-native-paper";
+import { StateProvider } from "./StateProvider";
+import reducer, { initialState } from "./reducer";
 
 // Stack Navigator
 
 const Stack = createStackNavigator();
 
+const HomeStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="DashboardScreen"
+      component={DashboardScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="BarcodeScanScreen"
+      component={BarcodeScanScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="PaymentScreen"
+      component={PaymentScreen}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
+
+const LoginStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="LoginScreen"
+      component={LoginScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="HomeScreen"
+      component={HomeStack}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
+
 // Stack Navigator
 
 export default function App() {
-  const [isSignedIn, setIsSignedIn] = useState(null);
+  const [user, setUser] = useState(null);
+
   return (
-    <Provider>
-      <NavigationContainer>
-        <Stack.Navigator mode="modal">
-          <>
-            <Stack.Screen
-              name="LoadingScreen"
-              component={LoadingScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="LoginScreen"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="DashboardScreen"
-              component={DashboardScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="BarcodeScanScreen"
-              component={BarcodeScanScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="PaymentScreen"
-              component={PaymentScreen}
-              options={{ headerShown: false }}
-            />
-          </>
-        </Stack.Navigator>
-      </NavigationContainer>
-    </Provider>
+    <StateProvider initialState={initialState} reducer={reducer}>
+      <Provider>
+        <NavigationContainer>
+          <LoginStack />
+        </NavigationContainer>
+      </Provider>
+    </StateProvider>
   );
 }
 

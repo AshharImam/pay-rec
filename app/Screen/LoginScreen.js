@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import * as Google from "expo-google-app-auth";
 import firebase from "firebase";
 import Screen from "../Components/Screen";
@@ -7,8 +7,24 @@ import db, { auth, provider } from "../../firebase";
 import { Text } from "react-native";
 import { useFonts } from "expo-font";
 import { AppLoading } from "expo";
+import { useStateValue } from "../../StateProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function LoginScreen({ navigation }) {
+  // const [disabled, setDisabled] = useState(false);
+  const [state, dispatch] = useStateValue();
+
+  useEffect(() => {
+    (() => {
+      auth.onAuthStateChanged((user) => {
+        console.log("User is >>>", user);
+        if (user) {
+          navigation.navigate("HomeScreen");
+        }
+      });
+    })();
+  }, []);
+
   useEffect(
     () =>
       navigation.addListener("beforeRemove", (e) => {
@@ -20,6 +36,13 @@ function LoginScreen({ navigation }) {
       }),
     [navigation]
   );
+
+  const setItem = async (key, value) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+      return;
+    } catch (error) {}
+  };
 
   const onSignIn = (googleUser) => {
     // console.log("Google Auth Response", googleUser);
@@ -33,14 +56,14 @@ function LoginScreen({ navigation }) {
           googleUser.idToken,
           googleUser.accessToken
         );
-        console.log(`credentials >>> ${credential}`);
+        // console.log(`credentials >>> ${credential}`);
         // Sign in with credential from the Google user.
+        console.log("Login__db query");
         firebase
           .auth()
           .signInWithCredential(credential)
           .then((result) => {
-            console.log("user signed in", result.additionalUserInfo.isNewUser);
-
+            // console.log("user signed in", result.additionalUserInfo.isNewUser);
             if (result.additionalUserInfo.isNewUser) {
               db.collection("users").doc(result.user.uid).set({
                 gmail: result.user.email,
@@ -50,16 +73,30 @@ function LoginScreen({ navigation }) {
                 lastName: result.additionalUserInfo.profile.family_name,
                 createdAt: Date.now(),
               });
+              // navigation.navigate("DashboardScreen",);
             } else {
               db.collection("users").doc(result.user.uid).update({
                 lastLoggin: Date.now(),
               });
+              // navigation.navigate("DashboardScreen", {
+              //   displayName: result.user.displayName,
+              //   uid: result.user.uid,
+              //   email: result.user.email,
+              // });
             }
-            navigation.navigate("DashboardScreen", {
-              displayName: result.user.displayName,
-              uid: result.user.uid,
-              email: result.user.email,
+            setItem("uid", result.user.uid);
+            dispatch({
+              type: "SET_USER",
+              user: result.user.uid,
             });
+            // setDisabled(false);
+            navigation.navigate("HomeScreen");
+            // console.log("LOGIN");
+            // navigation.navigate("DashboardScreen", {
+            //   displayName: result.user.displayName,
+            //   uid: result.user.uid,
+            //   email: result.user.email,
+            // });
           })
           .catch(function (error) {
             // Handle Errors here.
@@ -95,6 +132,7 @@ function LoginScreen({ navigation }) {
   };
 
   const signInWithGoogleAsync = async () => {
+    // setDisabled(true);
     try {
       const result = await Google.logInAsync({
         androidClientId:
@@ -104,7 +142,7 @@ function LoginScreen({ navigation }) {
       });
 
       if (result.type === "success") {
-        console.log(result);
+        // console.log(result);
         onSignIn(result);
         return result.accessToken;
       } else {

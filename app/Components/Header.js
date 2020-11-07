@@ -5,11 +5,21 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Appbar } from "react-native-paper";
 import firebase from "firebase";
+import { useStateValue } from "../../StateProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Header = ({ home = false }) => {
+const Header = ({ home = false, onPress }) => {
+  const [state, dispatch] = useStateValue();
   let [loaded] = useFonts({
     Precious: require("../assets/fonts/Precious.ttf"),
   });
+
+  const setItem = async (key, value) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+      return;
+    } catch (error) {}
+  };
   if (!loaded) {
     return <AppLoading />;
   }
@@ -17,10 +27,7 @@ const Header = ({ home = false }) => {
     <Appbar.Header style={styles.header}>
       <Text style={styles.logo}>pay-rec</Text>
       {home && (
-        <TouchableOpacity
-          style={styles.signOut}
-          onPress={() => firebase.auth().signOut()}
-        >
+        <TouchableOpacity style={styles.signOut} onPress={onPress}>
           <FontAwesome name="sign-out" size={30} color="#FFE28E" />
         </TouchableOpacity>
       )}

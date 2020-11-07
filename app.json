@@ -5,6 +5,18 @@
     "name": "pay-rec",
     "slug": "pay-rec",
     "version": "1.0.0",
-    "assetBundlePatterns": ["**/*"]
+    "assetBundlePatterns": ["**/*"],
+    "icon": "./app/assets/images/logo.jpg",
+    "splash": {
+      "image": "./app/assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFE28E"
+    }
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./app/assets/images/logo.jpg",
+      "backgroundColor": "#FFE28E"
+    }
   }
 }

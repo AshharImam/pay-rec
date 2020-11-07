@@ -1,9 +1,13 @@
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const AppSignInButton = ({ title, onPress }) => {
+const AppSignInButton = ({ title, onPress, disabled }) => {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.button, disabled && { opacity: "60%" }]}
+      onPress={onPress}
+      disabled={disabled}
+    >
       <Image
         source={require("../assets/images/google_image.png")}
         fadeDuration={0}
