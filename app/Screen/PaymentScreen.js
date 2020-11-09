@@ -326,6 +326,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   textInput: {
+    borderColor: "#2B4D59",
     backgroundColor: "#FFE28E",
     color: "#2B4D59",
     fontSize: 20,

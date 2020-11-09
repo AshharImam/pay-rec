@@ -6,12 +6,13 @@ import AppSignInButton from "../Components/AppSignInButton";
 import db, { auth, provider } from "../../firebase";
 import { Text } from "react-native";
 import { useFonts } from "expo-font";
-import { AppLoading } from "expo";
 import { useStateValue } from "../../StateProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ActivityIndicator } from "react-native-paper";
+import AppLoader from "../Components/AppLoader";
 
 function LoginScreen({ navigation }) {
-  // const [disabled, setDisabled] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [state, dispatch] = useStateValue();
 
   useEffect(() => {
@@ -19,6 +20,7 @@ function LoginScreen({ navigation }) {
       auth.onAuthStateChanged((user) => {
         console.log("User is >>>", user);
         if (user) {
+          setLoading(false);
           navigation.navigate("HomeScreen");
         }
       });
@@ -47,6 +49,7 @@ function LoginScreen({ navigation }) {
   const onSignIn = (googleUser) => {
     // console.log("Google Auth Response", googleUser);
     // We need to register an Observer on Firebase Auth to make sure auth is initialized.
+    setLoading(true);
     var unsubscribe = firebase.auth().onAuthStateChanged((firebaseUser) => {
       unsubscribe();
       // Check if we are already signed-in Firebase with the correct user.
@@ -89,7 +92,8 @@ function LoginScreen({ navigation }) {
               type: "SET_USER",
               user: result.user.uid,
             });
-            // setDisabled(false);
+
+            setLoading(false);
             navigation.navigate("HomeScreen");
             // console.log("LOGIN");
             // navigation.navigate("DashboardScreen", {
@@ -157,33 +161,42 @@ function LoginScreen({ navigation }) {
     Precious: require("../assets/fonts/Precious.ttf"),
   });
   if (!loaded) {
-    return <AppLoading />;
+    return <AppLoader backgroundCOlor={"#FFE28E"} color={"#2B4D59"} />;
   }
 
   return (
-    <Screen
-      style={{
-        justifyContent: "center",
-        backgroundColor: "#FFE28E",
-        alignItems: "center",
-        padding: 20,
-      }}
-    >
-      <Text
+    <>
+      <Screen
         style={{
-          fontSize: 70,
-          fontFamily: "Precious",
-          color: "#2B4D59",
-          marginBottom: 30,
+          justifyContent: "center",
+          backgroundColor: "#FFE28E",
+          alignItems: "center",
+          padding: 20,
         }}
       >
-        pay-rec
-      </Text>
-      <AppSignInButton
-        title="Signin With Google"
-        onPress={signInWithGoogleAsync}
-      />
-    </Screen>
+        <Text
+          style={{
+            fontSize: 70,
+            fontFamily: "Precious",
+            color: "#2B4D59",
+            marginBottom: 30,
+          }}
+        >
+          pay-rec
+        </Text>
+        <AppSignInButton
+          title="Signin With Google"
+          onPress={signInWithGoogleAsync}
+        />
+      </Screen>
+      {loading && (
+        <AppLoader
+          backgroundCOlor={"#FFE28E"}
+          color={"#2B4D59"}
+          opacity={0.8}
+        />
+      )}
+    </>
   );
 }
 

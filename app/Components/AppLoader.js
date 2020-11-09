@@ -1,12 +1,22 @@
 import React from "react";
-import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
-const AppLoader = ({ backgroundCOlor = "dodgerblue", color, text }) => {
+import { View, StyleSheet, Text } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
+const AppLoader = ({
+  backgroundCOlor = "dodgerblue",
+  color,
+  text,
+  opacity = 1,
+}) => {
   return (
     <View
-      style={[styles.loadingContainer, { backgroundColor: backgroundCOlor }]}
+      style={[
+        styles.loadingContainer,
+        { backgroundColor: backgroundCOlor, opacity: opacity },
+      ]}
     >
       <View style={styles.loading}>
         <ActivityIndicator size={50} color={color ? color : "#fff"} />
+        {/* <ActivityIndicator size={50} color={color ? color : "#fff"} /> */}
         <Text style={styles.infoText}>{text}</Text>
       </View>
     </View>

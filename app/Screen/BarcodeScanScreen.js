@@ -36,10 +36,18 @@ export default function BarcodeScanScreen({ navigation }) {
   };
 
   if (hasPermission === null) {
-    return <Text>Requesting for camera permission</Text>;
+    return (
+      <Screen>
+        <Text>Requesting for camera permission</Text>
+      </Screen>
+    );
   }
   if (hasPermission === false) {
-    return <Text>No access to camera</Text>;
+    return (
+      <Screen>
+        <Text>No access to camera</Text>
+      </Screen>
+    );
   }
 
   return (
